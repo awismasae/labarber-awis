@@ -1,6 +1,7 @@
 /**
  * LA Barber – ระบบจองคิวตัดผมถึงบ้าน
  * เก็บข้อมูลใน localStorage
+ * หยุดทุกวันจันทร์
  */
 
 const STORAGE_KEY = 'la_barber_bookings';
@@ -34,6 +35,12 @@ function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
+function isMonday(dateStr) {
+  if (!dateStr) return false;
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.getDay() === 1;
+}
+
 // ---------- Navigation ----------
 function showSection(sectionId) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -46,15 +53,12 @@ function showSection(sectionId) {
     l.classList.add('active');
   });
 
-  // Close mobile menu
   document.getElementById('mobileNav').classList.remove('open');
 
-  // Load queue when switching to queue section
   if (sectionId === 'queue') {
     renderQueue();
   }
 
-  // Hide success message when leaving booking
   if (sectionId !== 'booking') {
     document.getElementById('bookingSuccess').classList.add('hidden');
   }
@@ -69,10 +73,16 @@ function setupForm() {
   const form = document.getElementById('bookingForm');
   const dateInput = document.getElementById('date');
 
-  // Min date = tomorrow
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   dateInput.min = tomorrow.toISOString().split('T')[0];
+
+  dateInput.addEventListener('change', () => {
+    if (isMonday(dateInput.value)) {
+      alert('วันจันทร์ร้านหยุดครับ กรุณาเลือกวันอื่น');
+      dateInput.value = '';
+    }
+  });
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -89,7 +99,11 @@ function setupForm() {
       createdAt: new Date().toISOString()
     };
 
-    // Check duplicate slot
+    if (isMonday(booking.date)) {
+      alert('วันจันทร์ร้านหยุดครับ กรุณาเลือกวันอื่น');
+      return;
+    }
+
     const bookings = getBookings();
     const conflict = bookings.find(
       b => b.date === booking.date && b.time === booking.time
@@ -127,14 +141,12 @@ function confirmAndSave() {
 
   const bookings = getBookings();
   bookings.push(pendingBooking);
-  // Sort by date then time
   bookings.sort((a, b) => {
     if (a.date !== b.date) return a.date.localeCompare(b.date);
     return a.time.localeCompare(b.time);
   });
   saveBookings(bookings);
 
-  // Show success
   const msg = document.getElementById('successMessage');
   msg.textContent = `จองคิวสำเร็จสำหรับ ${formatDateThai(pendingBooking.date)} เวลา ${pendingBooking.time} น. ช่างซอลาจะติดต่อกลับเพื่อยืนยันอีกครั้ง`;
   document.getElementById('bookingSuccess').classList.remove('hidden');
@@ -187,7 +199,6 @@ function renderQueue(filterDate = null) {
     </div>
   `).join('');
 
-  // Cancel buttons
   listEl.querySelectorAll('.btn-cancel').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.dataset.id;
@@ -207,10 +218,8 @@ function cancelBooking(id) {
 
 // ---------- Init ----------
 document.addEventListener('DOMContentLoaded', () => {
-  // Year
   document.getElementById('year').textContent = new Date().getFullYear() + 543;
 
-  // Nav links
   document.querySelectorAll('[data-section]').forEach(el => {
     el.addEventListener('click', (e) => {
       e.preventDefault();
@@ -219,20 +228,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Mobile menu
   document.getElementById('menuToggle').addEventListener('click', () => {
     document.getElementById('mobileNav').classList.toggle('open');
   });
 
-  // Form
   setupForm();
 
-  // Modal
   document.getElementById('cancelConfirm').addEventListener('click', hideConfirmModal);
   document.getElementById('confirmBooking').addEventListener('click', confirmAndSave);
   document.querySelector('.modal-backdrop').addEventListener('click', hideConfirmModal);
 
-  // Queue controls
   document.getElementById('filterDate').addEventListener('change', (e) => {
     renderQueue(e.target.value || null);
   });
@@ -245,7 +250,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('goToQueue').addEventListener('click', () => showSection('queue'));
 
-  // Default section from hash
   const hash = window.location.hash.slice(1);
   if (['home', 'booking', 'queue', 'about'].includes(hash)) {
     showSection(hash);
