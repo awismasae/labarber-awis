@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LA Barber | จองคิวตัดผมถึงบ้าน</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container header-inner">
+      <div class="logo">
+        <span class="logo-icon">✂</span>
+        <div>
+          <h1>LA Barber</h1>
+          <p class="tagline">ตัดผมถึงบ้าน โดย ช่างซอลา</p>
+        </div>
+      </div>
+      <nav class="nav">
+        <a href="#home" class="nav-link active" data-section="home">หน้าหลัก</a>
+        <a href="#booking" class="nav-link" data-section="booking">จองคิว</a>
+        <a href="#queue" class="nav-link" data-section="queue">เช็คคิว</a>
+        <a href="#about" class="nav-link" data-section="about">เกี่ยวกับ</a>
+      </nav>
+      <button class="menu-toggle" id="menuToggle" aria-label="เมนู">☰</button>
+    </div>
+  </header>
+
+  <!-- Mobile Nav -->
+  <div class="mobile-nav" id="mobileNav">
+    <a href="#home" class="nav-link" data-section="home">หน้าหลัก</a>
+    <a href="#booking" class="nav-link" data-section="booking">จองคิว</a>
+    <a href="#queue" class="nav-link" data-section="queue">เช็คคิว</a>
+    <a href="#about" class="nav-link" data-section="about">เกี่ยวกับ</a>
+  </div>
+
+  <main>
+    <!-- Hero / Home -->
+    <section id="home" class="section hero active">
+      <div class="container">
+        <div class="hero-content">
+          <div class="hero-text">
+            <span class="badge">บริการตัดผมถึงบ้าน</span>
+            <h2>ตัดผมสวย สะดวก<br>ถึงหน้าบ้านคุณ</h2>
+            <p>บริการตัดผมชายถึงบ้านโดย <strong>ช่างซอลา</strong> จาก LA Barber<br>
+            นัดหมายง่าย ดูคิวว่างได้ทันที ไม่ต้องเดินทาง</p>
+            <div class="hero-actions">
+              <a href="#booking" class="btn btn-primary" data-section="booking">จองคิวเลย</a>
+              <a href="#queue" class="btn btn-outline" data-section="queue">ดูคิวว่าง</a>
+            </div>
+          </div>
+          <div class="hero-card">
+            <div class="barber-card">
+              <div class="barber-avatar">ซอ</div>
+              <h3>ช่างซอลา</h3>
+              <p class="barber-role">ช่างตัดผมมืออาชีพ</p>
+              <ul class="barber-info">
+                <li>✂ ตัดผมชายทุกรูปแบบ</li>
+                <li>🏠 บริการถึงบ้าน</li>
+                <li>⏰ นัดหมายล่วงหน้า</li>
+                <li>📍 เขตกรุงเทพและปริมณฑล</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="features">
+          <div class="feature-card">
+            <div class="feature-icon">📅</div>
+            <h4>จองง่าย</h4>
+            <p>กรอกข้อมูลและเลือกวันเวลาที่สะดวก ระบบบันทึกคิวทันที</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">👀</div>
+            <h4>เช็คคิวได้</h4>
+            <p>ดูรายการคิวที่จองแล้ว รู้ว่าช่างว่างวันไหน</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🏠</div>
+            <h4>ถึงบ้านคุณ</h4>
+            <p>ไม่ต้องเดินทาง ช่างซอลาไปหาคุณที่บ้านตามนัด</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Booking -->
+    <section id="booking" class="section">
+      <div class="container">
+        <div class="section-header">
+          <h2>จองคิวตัดผมถึงบ้าน</h2>
+          <p>กรอกข้อมูลด้านล่าง แล้วกดยืนยันการจอง</p>
+        </div>
+
+        <form id="bookingForm" class="booking-form">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="customerName">ชื่อ-นามสกุล <span class="required">*</span></label>
+              <input type="text" id="customerName" name="customerName" required placeholder="เช่น สมชาย ใจดี">
+            </div>
+            <div class="form-group">
+              <label for="phone">เบอร์โทรศัพท์ <span class="required">*</span></label>
+              <input type="tel" id="phone" name="phone" required placeholder="08x-xxx-xxxx" pattern="[0-9\-]{9,12}">
+            </div>
+            <div class="form-group full">
+              <label for="address">ที่อยู่ (สำหรับไปให้บริการ) <span class="required">*</span></label>
+              <textarea id="address" name="address" required rows="2" placeholder="บ้านเลขที่ ซอย ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด"></textarea>
+            </div>
+            <div class="form-group">
+              <label for="date">วันที่ต้องการ <span class="required">*</span></label>
+              <input type="date" id="date" name="date" required>
+            </div>
+            <div class="form-group">
+              <label for="time">เวลาที่ต้องการ <span class="required">*</span></label>
+              <select id="time" name="time" required>
+                <option value="">-- เลือกเวลา --</option>
+                <option value="09:00">09:00 น.</option>
+                <option value="10:00">10:00 น.</option>
+                <option value="11:00">11:00 น.</option>
+                <option value="12:00">12:00 น.</option>
+                <option value="13:00">13:00 น.</option>
+                <option value="14:00">14:00 น.</option>
+                <option value="15:00">15:00 น.</option>
+                <option value="16:00">16:00 น.</option>
+                <option value="17:00">17:00 น.</option>
+                <option value="18:00">18:00 น.</option>
+              </select>
+            </div>
+            <div class="form-group full">
+              <label for="service">บริการที่ต้องการ</label>
+              <select id="service" name="service">
+                <option value="ตัดผม">ตัดผม</option>
+                <option value="ตัดผม + โกนหนวด">ตัดผม + โกนหนวด</option>
+                <option value="ตัดผม + สระ">ตัดผม + สระ</option>
+                <option value="อื่นๆ">อื่นๆ (ระบุในหมายเหตุ)</option>
+              </select>
+            </div>
+            <div class="form-group full">
+              <label for="note">หมายเหตุเพิ่มเติม</label>
+              <textarea id="note" name="note" rows="2" placeholder="เช่น สไตล์ที่ชอบ, จุดสังเกตบ้าน, หรือข้อความถึงช่าง"></textarea>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-lg">ยืนยันการจอง</button>
+            <button type="reset" class="btn btn-outline">ล้างฟอร์ม</button>
+          </div>
+        </form>
+
+        <div id="bookingSuccess" class="alert alert-success hidden">
+          <strong>จองคิวสำเร็จ!</strong>
+          <p id="successMessage"></p>
+          <button type="button" class="btn btn-outline btn-sm" id="goToQueue">ไปดูคิวทั้งหมด</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Queue Check -->
+    <section id="queue" class="section">
+      <div class="container">
+        <div class="section-header">
+          <h2>เช็คคิวที่จองแล้ว</h2>
+          <p>รายการคิวทั้งหมดของ ช่างซอลา (LA Barber)</p>
+        </div>
+
+        <div class="queue-controls">
+          <div class="filter-group">
+            <label for="filterDate">กรองตามวันที่</label>
+            <input type="date" id="filterDate">
+          </div>
+          <button type="button" class="btn btn-outline btn-sm" id="clearFilter">แสดงทั้งหมด</button>
+          <button type="button" class="btn btn-outline btn-sm" id="refreshQueue">รีเฟรช</button>
+        </div>
+
+        <div id="queueEmpty" class="empty-state hidden">
+          <div class="empty-icon">📋</div>
+          <h3>ยังไม่มีคิวที่จอง</h3>
+          <p>เป็นคนแรกที่จองคิวกับ ช่างซอลา ได้เลย</p>
+          <a href="#booking" class="btn btn-primary" data-section="booking">จองคิว</a>
+        </div>
+
+        <div id="queueList" class="queue-list"></div>
+      </div>
+    </section>
+
+    <!-- About -->
+    <section id="about" class="section">
+      <div class="container">
+        <div class="section-header">
+          <h2>เกี่ยวกับ LA Barber</h2>
+          <p>บริการตัดผมชายถึงบ้านโดยช่างซอลา</p>
+        </div>
+        <div class="about-content">
+          <div class="about-text">
+            <p><strong>LA Barber</strong> ให้บริการตัดผมชายถึงบ้านลูกค้า โดย <strong>ช่างซอลา</strong> ช่างที่มีประสบการณ์และใส่ใจทุกรายละเอียด</p>
+            <p>เหมาะสำหรับผู้ที่ต้องการความสะดวก ไม่ต้องเดินทางไปร้าน หรือต้องการความเป็นส่วนตัวที่บ้าน</p>
+            <h4>สิ่งที่ควรทราบ</h4>
+            <ul>
+              <li>กรุณาจองล่วงหน้าอย่างน้อย 1 วัน</li>
+              <li>ช่างจะติดต่อกลับเพื่อยืนยันคิวและรายละเอียด</li>
+              <li>พื้นที่ให้บริการ: กรุงเทพและปริมณฑล (สอบถามเพิ่มได้)</li>
+              <li>เวลาทำการโดยประมาณ: 09:00 – 18:00 น.</li>
+            </ul>
+            <p class="contact-note">หากต้องการสอบถามเพิ่มเติม สามารถโทรหรือส่งข้อความหาช่างซอลาโดยตรงได้</p>
+          </div>
+          <div class="about-card">
+            <h3>LA Barber</h3>
+            <p class="about-barber">ช่างซอลา</p>
+            <p>✂️ ตัดผมชายถึงบ้าน</p>
+            <p>🕐 จองคิวออนไลน์ได้ตลอด 24 ชม.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>© <span id="year"></span> LA Barber · ช่างซอลา · บริการตัดผมถึงบ้าน</p>
+      <p class="footer-note">ข้อมูลการจองถูกเก็บในเบราว์เซอร์ของคุณ (localStorage)</p>
+    </div>
+  </footer>
+
+  <!-- Confirm Modal -->
+  <div id="confirmModal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <h3>ยืนยันการจอง</h3>
+      <div id="confirmDetails" class="confirm-details"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" id="cancelConfirm">ยกเลิก</button>
+        <button type="button" class="btn btn-primary" id="confirmBooking">ยืนยันจอง</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
