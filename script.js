@@ -1,24 +1,10 @@
 /**
- * LA Barber – ระบบจองคิวตัดผมถึงบ้าน
- * เก็บข้อมูลใน localStorage
+ * LA Barber – จองคิวตัดผมถึงบ้าน
+ * คิวกลาง: ทุกคนเห็นรายชื่อเดียวกัน
  * หยุดทุกวันจันทร์
  */
 
-const STORAGE_KEY = 'la_barber_bookings';
-
-// ---------- Helpers ----------
-function getBookings() {
-  try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveBookings(bookings) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
-}
+const API = 'https://crudcrud.com/api/3c7683e8a5154dd782b58f376dbbe543/bookings';
 
 function formatDateThai(dateStr) {
   if (!dateStr) return '';
@@ -31,47 +17,49 @@ function formatDateThai(dateStr) {
   return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear() + 543}`;
 }
 
-function generateId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-}
-
 function isMonday(dateStr) {
   if (!dateStr) return false;
-  const d = new Date(dateStr + 'T00:00:00');
-  return d.getDay() === 1;
+  return new Date(dateStr + 'T00:00:00').getDay() === 1;
 }
 
-// ---------- Navigation ----------
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text || '';
+  return div.innerHTML;
+}
+
+async function fetchBookings() {
+  const res = await fetch(API);
+  if (!res.ok) throw new Error('โหลดคิวไม่สำเร็จ');
+  const list = await res.json();
+  return list.sort((a, b) => {
+    if (a.date !== b.date) return String(a.date).localeCompare(String(b.date));
+    return String(a.time).localeCompare(String(b.time));
+  });
+}
+
 function showSection(sectionId) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-
   const section = document.getElementById(sectionId);
   if (section) section.classList.add('active');
-
-  document.querySelectorAll(`.nav-link[data-section="${sectionId}"]`).forEach(l => {
-    l.classList.add('active');
-  });
-
-  document.getElementById('mobileNav').classList.remove('open');
-
-  if (sectionId === 'queue') {
-    renderQueue();
-  }
-
+  document.querySelectorAll(`.nav-link[data-section="${sectionId}"]`).forEach(l => l.classList.add('active'));
+  const mobile = document.getElementById('mobileNav');
+  if (mobile) mobile.classList.remove('open');
+  if (sectionId === 'queue') renderQueue();
   if (sectionId !== 'booking') {
-    document.getElementById('bookingSuccess').classList.add('hidden');
+    const ok = document.getElementById('bookingSuccess');
+    if (ok) ok.classList.add('hidden');
   }
-
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ---------- Booking Form ----------
 let pendingBooking = null;
 
 function setupForm() {
   const form = document.getElementById('bookingForm');
   const dateInput = document.getElementById('date');
+  if (!form || !dateInput) return;
 
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
@@ -84,11 +72,9 @@ function setupForm() {
     }
   });
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
-
     const booking = {
-      id: generateId(),
       customerName: document.getElementById('customerName').value.trim(),
       phone: document.getElementById('phone').value.trim(),
       address: document.getElementById('address').value.trim(),
@@ -104,31 +90,30 @@ function setupForm() {
       return;
     }
 
-    const bookings = getBookings();
-    const conflict = bookings.find(
-      b => b.date === booking.date && b.time === booking.time
-    );
-    if (conflict) {
-      alert(`ขออภัย ช่วงเวลา ${booking.time} น. ของวันที่ ${formatDateThai(booking.date)} มีคนจองแล้ว กรุณาเลือกเวลาอื่น`);
+    try {
+      const existing = await fetchBookings();
+      const conflict = existing.find(b => b.date === booking.date && b.time === booking.time);
+      if (conflict) {
+        alert(`ขออภัย ช่วงเวลา ${booking.time} น. ของวันที่ ${formatDateThai(booking.date)} มีคนจองแล้ว กรุณาเลือกเวลาอื่น`);
+        return;
+      }
+    } catch {
+      alert('เชื่อมต่อคิวกลางไม่ได้ ลองใหม่อีกครั้ง');
       return;
     }
 
     pendingBooking = booking;
-    showConfirmModal(booking);
+    const details = document.getElementById('confirmDetails');
+    details.innerHTML = `
+      <p><strong>ชื่อ:</strong> ${escapeHtml(booking.customerName)}</p>
+      <p><strong>โทร:</strong> ${escapeHtml(booking.phone)}</p>
+      <p><strong>ที่อยู่:</strong> ${escapeHtml(booking.address)}</p>
+      <p><strong>วันเวลา:</strong> ${formatDateThai(booking.date)} เวลา ${booking.time} น.</p>
+      <p><strong>บริการ:</strong> ${escapeHtml(booking.service)}</p>
+      ${booking.note ? `<p><strong>หมายเหตุ:</strong> ${escapeHtml(booking.note)}</p>` : ''}
+    `;
+    document.getElementById('confirmModal').classList.remove('hidden');
   });
-}
-
-function showConfirmModal(booking) {
-  const details = document.getElementById('confirmDetails');
-  details.innerHTML = `
-    <p><strong>ชื่อ:</strong> ${escapeHtml(booking.customerName)}</p>
-    <p><strong>โทร:</strong> ${escapeHtml(booking.phone)}</p>
-    <p><strong>ที่อยู่:</strong> ${escapeHtml(booking.address)}</p>
-    <p><strong>วันเวลา:</strong> ${formatDateThai(booking.date)} เวลา ${booking.time} น.</p>
-    <p><strong>บริการ:</strong> ${escapeHtml(booking.service)}</p>
-    ${booking.note ? `<p><strong>หมายเหตุ:</strong> ${escapeHtml(booking.note)}</p>` : ''}
-  `;
-  document.getElementById('confirmModal').classList.remove('hidden');
 }
 
 function hideConfirmModal() {
@@ -136,124 +121,100 @@ function hideConfirmModal() {
   pendingBooking = null;
 }
 
-function confirmAndSave() {
+async function confirmAndSave() {
   if (!pendingBooking) return;
-
-  const bookings = getBookings();
-  bookings.push(pendingBooking);
-  bookings.sort((a, b) => {
-    if (a.date !== b.date) return a.date.localeCompare(b.date);
-    return a.time.localeCompare(b.time);
-  });
-  saveBookings(bookings);
-
-  const msg = document.getElementById('successMessage');
-  msg.textContent = `จองคิวสำเร็จสำหรับ ${formatDateThai(pendingBooking.date)} เวลา ${pendingBooking.time} น. ช่างซอลาจะติดต่อกลับเพื่อยืนยันอีกครั้ง`;
-  document.getElementById('bookingSuccess').classList.remove('hidden');
-  document.getElementById('bookingForm').reset();
-
-  hideConfirmModal();
-  window.scrollTo({ top: document.getElementById('bookingSuccess').offsetTop - 80, behavior: 'smooth' });
+  const btn = document.getElementById('confirmBooking');
+  btn.disabled = true;
+  try {
+    const res = await fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(pendingBooking)
+    });
+    if (!res.ok) throw new Error('save failed');
+    const saved = pendingBooking;
+    document.getElementById('successMessage').textContent =
+      `จองคิวสำเร็จสำหรับ ${formatDateThai(saved.date)} เวลา ${saved.time} น. รายชื่อนี้ทุกคนเห็นร่วมกันแล้ว`;
+    document.getElementById('bookingSuccess').classList.remove('hidden');
+    document.getElementById('bookingForm').reset();
+    hideConfirmModal();
+  } catch {
+    alert('บันทึกคิวไม่สำเร็จ ลองใหม่อีกครั้ง');
+  } finally {
+    btn.disabled = false;
+  }
 }
 
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-// ---------- Queue ----------
-function renderQueue(filterDate = null) {
+async function renderQueue(filterDate = null) {
   const listEl = document.getElementById('queueList');
   const emptyEl = document.getElementById('queueEmpty');
-  let bookings = getBookings();
-
-  if (filterDate) {
-    bookings = bookings.filter(b => b.date === filterDate);
-  }
-
-  if (bookings.length === 0) {
-    listEl.innerHTML = '';
-    emptyEl.classList.remove('hidden');
-    return;
-  }
-
-  emptyEl.classList.add('hidden');
-
-  listEl.innerHTML = bookings.map(b => `
-    <div class="queue-item" data-id="${b.id}">
-      <div class="queue-time">
-        <div class="date">${formatDateThai(b.date)}</div>
-        <div class="time">${b.time} น.</div>
+  if (!listEl) return;
+  listEl.innerHTML = '<p style="text-align:center;color:#6B5344">กำลังโหลดคิว...</p>';
+  try {
+    let bookings = await fetchBookings();
+    if (filterDate) bookings = bookings.filter(b => b.date === filterDate);
+    if (!bookings.length) {
+      listEl.innerHTML = '';
+      emptyEl.classList.remove('hidden');
+      return;
+    }
+    emptyEl.classList.add('hidden');
+    listEl.innerHTML = bookings.map(b => `
+      <div class="queue-item">
+        <div class="queue-time">
+          <div class="date">${formatDateThai(b.date)}</div>
+          <div class="time">${b.time} น.</div>
+        </div>
+        <div class="queue-info">
+          <h4>${escapeHtml(b.customerName)}</h4>
+          <p>📞 ${escapeHtml(b.phone)}</p>
+          <p>📍 ${escapeHtml(b.address)}</p>
+          ${b.note ? `<p>💬 ${escapeHtml(b.note)}</p>` : ''}
+          <span class="service-tag">${escapeHtml(b.service)}</span>
+        </div>
+        <div class="queue-actions">
+          <button type="button" class="btn btn-danger btn-cancel" data-id="${b._id}">ยกเลิกคิว</button>
+        </div>
       </div>
-      <div class="queue-info">
-        <h4>${escapeHtml(b.customerName)}</h4>
-        <p>📞 ${escapeHtml(b.phone)}</p>
-        <p>📍 ${escapeHtml(b.address)}</p>
-        ${b.note ? `<p>💬 ${escapeHtml(b.note)}</p>` : ''}
-        <span class="service-tag">${escapeHtml(b.service)}</span>
-      </div>
-      <div class="queue-actions">
-        <button type="button" class="btn btn-danger btn-cancel" data-id="${b.id}">ยกเลิกคิว</button>
-      </div>
-    </div>
-  `).join('');
-
-  listEl.querySelectorAll('.btn-cancel').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const id = btn.dataset.id;
-      if (confirm('ต้องการยกเลิกคิวนี้ใช่หรือไม่?')) {
-        cancelBooking(id);
-      }
+    `).join('');
+    listEl.querySelectorAll('.btn-cancel').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('ต้องการยกเลิกคิวนี้ใช่หรือไม่?')) return;
+        await fetch(`${API}/${btn.dataset.id}`, { method: 'DELETE' });
+        renderQueue(document.getElementById('filterDate').value || null);
+      });
     });
-  });
+  } catch {
+    listEl.innerHTML = '<p style="text-align:center;color:#B33A3A">โหลดคิวไม่ได้ ลองกดรีเฟรช</p>';
+  }
 }
 
-function cancelBooking(id) {
-  let bookings = getBookings();
-  bookings = bookings.filter(b => b.id !== id);
-  saveBookings(bookings);
-  renderQueue(document.getElementById('filterDate').value || null);
-}
-
-// ---------- Init ----------
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('year').textContent = new Date().getFullYear() + 543;
+  const year = document.getElementById('year');
+  if (year) year.textContent = new Date().getFullYear() + 543;
 
   document.querySelectorAll('[data-section]').forEach(el => {
     el.addEventListener('click', (e) => {
       e.preventDefault();
-      const section = el.dataset.section;
-      if (section) showSection(section);
+      if (el.dataset.section) showSection(el.dataset.section);
     });
   });
 
-  document.getElementById('menuToggle').addEventListener('click', () => {
-    document.getElementById('mobileNav').classList.toggle('open');
-  });
+  const menu = document.getElementById('menuToggle');
+  if (menu) menu.addEventListener('click', () => document.getElementById('mobileNav').classList.toggle('open'));
 
   setupForm();
-
   document.getElementById('cancelConfirm').addEventListener('click', hideConfirmModal);
   document.getElementById('confirmBooking').addEventListener('click', confirmAndSave);
   document.querySelector('.modal-backdrop').addEventListener('click', hideConfirmModal);
-
-  document.getElementById('filterDate').addEventListener('change', (e) => {
-    renderQueue(e.target.value || null);
-  });
+  document.getElementById('filterDate').addEventListener('change', (e) => renderQueue(e.target.value || null));
   document.getElementById('clearFilter').addEventListener('click', () => {
     document.getElementById('filterDate').value = '';
     renderQueue();
   });
-  document.getElementById('refreshQueue').addEventListener('click', () => {
-    renderQueue(document.getElementById('filterDate').value || null);
-  });
+  document.getElementById('refreshQueue').addEventListener('click', () => renderQueue(document.getElementById('filterDate').value || null));
   document.getElementById('goToQueue').addEventListener('click', () => showSection('queue'));
 
   const hash = window.location.hash.slice(1);
-  if (['home', 'booking', 'queue', 'about'].includes(hash)) {
-    showSection(hash);
-  } else {
-    showSection('home');
-  }
+  showSection(['home', 'booking', 'queue', 'about'].includes(hash) ? hash : 'home');
 });
