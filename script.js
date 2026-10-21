@@ -1,6 +1,7 @@
 /**
  * LA Barber – คิวกลางใน Google Sheet
  * หยุดทุกวันจันทร์
+ * ลูกค้าลบได้เฉพาะคิวของตัวเองเท่านั้น
  */
 const API = 'https://script.google.com/macros/s/AKfycbyj7vglCTIY835MkNGMqC1Tu0jYgQybZzYhZS1MFvjFAFNRntB2kyWacIyN6OnQx5F1/exec';
 
@@ -22,6 +23,24 @@ function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text || '';
   return div.innerHTML;
+}
+
+// เก็บรหัสคิวที่ตัวเองจองไว้ในเครื่องนี้
+function saveMyBooking(id) {
+  try {
+    const list = JSON.parse(localStorage.getItem('labarber_my_bookings') || '[]');
+    if (!list.includes(id)) list.push(id);
+    localStorage.setItem('labarber_my_bookings', JSON.stringify(list));
+  } catch {}
+}
+
+function isMyBooking(id) {
+  try {
+    const list = JSON.parse(localStorage.getItem('labarber_my_bookings') || '[]');
+    return list.includes(String(id));
+  } catch {
+    return false;
+  }
 }
 
 async function fetchBookings() {
@@ -125,9 +144,13 @@ async function confirmAndSave() {
   const btn = document.getElementById('confirmBooking');
   btn.disabled = true;
   try {
-    await postJson(pendingBooking);
+    const result = await postJson(pendingBooking);
+    // เก็บรหัสคิวที่ตัวเองจองไว้
+    if (result && result.id) {
+      saveMyBooking(result.id);
+    }
     document.getElementById('successMessage').textContent =
-      `จองคิวสำเร็จสำหรับ ${formatDateThai(pendingBooking.date)} เวลา ${pendingBooking.time} น. ทุกคนเห็นชื่อนี้ร่วมกันแล้ว`;
+      `จองคิวสำเร็จสำหรับ ${formatDateThai(pendingBooking.date)} เวลา ${pendingBooking.time} น.`;
     document.getElementById('bookingSuccess').classList.remove('hidden');
     document.getElementById('bookingForm').reset();
     hideConfirmModal();
@@ -152,28 +175,40 @@ async function renderQueue(filterDate = null) {
       return;
     }
     emptyEl.classList.add('hidden');
-    listEl.innerHTML = bookings.map(b => `
-      <div class="queue-item">
-        <div class="queue-time">
-          <div class="date">${formatDateThai(b.date)}</div>
-          <div class="time">${b.time} น.</div>
+    listEl.innerHTML = bookings.map(b => {
+      const canCancel = isMyBooking(b.id);
+      return `
+        <div class="queue-item">
+          <div class="queue-time">
+            <div class="date">${formatDateThai(b.date)}</div>
+            <div class="time">${b.time} น.</div>
+          </div>
+          <div class="queue-info">
+            <h4>${escapeHtml(b.customerName)}</h4>
+            <p>📞 ${escapeHtml(b.phone)}</p>
+            <p>📍 ${escapeHtml(b.address)}</p>
+            ${b.note ? `<p>💬 ${escapeHtml(b.note)}</p>` : ''}
+            <span class="service-tag">${escapeHtml(b.service)}</span>
+          </div>
+          <div class="queue-actions">
+            ${canCancel
+              ? `<button type="button" class="btn btn-danger btn-cancel" data-id="${b.id}">ยกเลิกคิวของฉัน</button>`
+              : `<span style="color:#999;font-size:0.85rem;">—</span>`
+            }
+          </div>
         </div>
-        <div class="queue-info">
-          <h4>${escapeHtml(b.customerName)}</h4>
-          <p>📞 ${escapeHtml(b.phone)}</p>
-          <p>📍 ${escapeHtml(b.address)}</p>
-          ${b.note ? `<p>💬 ${escapeHtml(b.note)}</p>` : ''}
-          <span class="service-tag">${escapeHtml(b.service)}</span>
-        </div>
-        <div class="queue-actions">
-          <button type="button" class="btn btn-danger btn-cancel" data-id="${b.id}">ยกเลิกคิว</button>
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
+
     listEl.querySelectorAll('.btn-cancel').forEach(btn => {
       btn.addEventListener('click', async () => {
         if (!confirm('ต้องการยกเลิกคิวนี้ใช่หรือไม่?')) return;
         await postJson({ action: 'delete', id: btn.dataset.id });
+        // ลบออกจากรายการของตัวเองด้วย
+        try {
+          const list = JSON.parse(localStorage.getItem('labarber_my_bookings') || '[]');
+          localStorage.setItem('labarber_my_bookings', JSON.stringify(list.filter(id => id !== btn.dataset.id)));
+        } catch {}
         renderQueue(document.getElementById('filterDate').value || null);
       });
     });
