@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="th">
 <head>
   <meta charset="UTF-8">
@@ -10,7 +10,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <!-- Header -->
   <header class="header">
     <div class="container header-inner">
       <div class="logo">
@@ -30,7 +29,6 @@
     </div>
   </header>
 
-  <!-- Mobile Nav -->
   <div class="mobile-nav" id="mobileNav">
     <a href="#home" class="nav-link active" data-section="home">หน้าหลัก</a>
     <a href="#booking" class="nav-link" data-section="booking">จองคิว</a>
@@ -39,15 +37,13 @@
   </div>
 
   <main>
-    <!-- Hero / Home -->
     <section id="home" class="section hero active">
       <div class="container">
         <div class="hero-content">
           <div class="hero-text">
             <span class="badge">บริการตัดผมถึงบ้าน</span>
             <h2>ตัดผมสวย สะดวก<br>ถึงหน้าบ้านคุณ</h2>
-            <p>บริการตัดผมชายถึงบ้านโดย <strong>ช่างซอลา</strong> จาก LA Barber<br>
-            นัดหมายง่าย ดูคิวว่างได้ทันที ไม่ต้องเดินทาง</p>
+            <p>บริการตัดผมชายถึงบ้านโดย <strong>ช่างซอลา</strong> จาก LA Barber<br>นัดหมายง่าย ดูคิวว่างได้ทันที ไม่ต้องเดินทาง</p>
             <div class="hero-actions">
               <a href="#booking" class="btn btn-primary" data-section="booking">จองคิวเลย</a>
               <a href="#queue" class="btn btn-outline" data-section="queue">ดูคิวว่าง</a>
@@ -67,7 +63,6 @@
             </div>
           </div>
         </div>
-
         <div class="features">
           <div class="feature-card">
             <div class="feature-icon">📅</div>
@@ -88,14 +83,12 @@
       </div>
     </section>
 
-    <!-- Booking -->
     <section id="booking" class="section">
       <div class="container">
         <div class="section-header">
           <h2>จองคิวตัดผมถึงบ้าน</h2>
           <p>กรอกข้อมูลด้านล่าง แล้วกดยืนยันการจอง</p>
         </div>
-
         <form id="bookingForm" class="booking-form">
           <div class="form-grid">
             <div class="form-group">
@@ -109,6 +102,11 @@
             <div class="form-group full">
               <label for="address">ที่อยู่ (สำหรับไปให้บริการ) <span class="required">*</span></label>
               <textarea id="address" name="address" required rows="2" placeholder="บ้านเลขที่ ซอย ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด"></textarea>
+              <button type="button" id="getLocation" class="btn btn-outline btn-sm" style="margin-top: 0.5rem;">
+                📍 ใช้ตำแหน่งปัจจุบัน
+              </button>
+              <input type="hidden" id="lat" name="lat">
+              <input type="hidden" id="lng" name="lng">
             </div>
             <div class="form-group">
               <label for="date">วันที่ต้องการ <span class="required">*</span></label>
@@ -145,13 +143,11 @@
               <textarea id="note" name="note" rows="2" placeholder="เช่น สไตล์ที่ชอบ, จุดสังเกตบ้าน, หรือข้อความถึงช่าง"></textarea>
             </div>
           </div>
-
           <div class="form-actions">
             <button type="submit" class="btn btn-primary btn-lg">ยืนยันการจอง</button>
             <button type="reset" class="btn btn-outline">ล้างฟอร์ม</button>
           </div>
         </form>
-
         <div id="bookingSuccess" class="alert alert-success hidden">
           <strong>จองคิวสำเร็จ!</strong>
           <p id="successMessage"></p>
@@ -160,14 +156,12 @@
       </div>
     </section>
 
-    <!-- Queue Check -->
     <section id="queue" class="section">
       <div class="container">
         <div class="section-header">
           <h2>เช็คคิวที่จองแล้ว</h2>
           <p>รายการคิวทั้งหมดของ ช่างซอลา (LA Barber)</p>
         </div>
-
         <div class="queue-controls">
           <div class="filter-group">
             <label for="filterDate">กรองตามวันที่</label>
@@ -176,19 +170,16 @@
           <button type="button" class="btn btn-outline btn-sm" id="clearFilter">แสดงทั้งหมด</button>
           <button type="button" class="btn btn-outline btn-sm" id="refreshQueue">รีเฟรช</button>
         </div>
-
         <div id="queueEmpty" class="empty-state hidden">
           <div class="empty-icon">📋</div>
           <h3>ยังไม่มีคิวที่จอง</h3>
           <p>เป็นคนแรกที่จองคิวกับ ช่างซอลา ได้เลย</p>
           <a href="#booking" class="btn btn-primary" data-section="booking">จองคิว</a>
         </div>
-
         <div id="queueList" class="queue-list"></div>
       </div>
     </section>
 
-    <!-- About -->
     <section id="about" class="section">
       <div class="container">
         <div class="section-header">
@@ -210,52 +201,4 @@
           </div>
           <div class="about-card">
             <h3>LA Barber</h3>
-            <p class="about-barber">ช่างซอลา</p>
-            <p>✂️ ตัดผมชายถึงบ้าน</p>
-            <p>🕐 จองคิวออนไลน์ได้ตลอด 24 ชม.</p>
-          </div>
-        </div>
-
-        <!-- แผนที่ -->
-        <div style="margin-top: 2.5rem;">
-          <h4 style="text-align:center; margin-bottom:1rem; color:#5C4033;">พื้นที่ให้บริการในเมืองสงขลา</h4>
-          <iframe 
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d63448.123456789!2d100.5951!3d7.1895!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x304d8a5f5f5f5f5f%3A0x1234567890abcdef!2sSongkhla!5e0!3m2!1sth!2sth!4v1690000000000" 
-            width="100%" 
-            height="320" 
-            style="border:0; border-radius:16px; box-shadow: 0 4px 15px rgba(0,0,0,0.08);" 
-            allowfullscreen="" 
-            loading="lazy" 
-            referrerpolicy="no-referrer-when-downgrade">
-          </iframe>
-          <p style="text-align:center; margin-top:0.75rem; color:#6B5344; font-size:0.95rem;">
-            📍 บริการถึงบ้านภายในตัวเมืองสงขลา
-          </p>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer class="footer">
-    <div class="container">
-      <p>© <span id="year">2569</span> LA Barber · ช่างซอลา · บริการตัดผมถึงบ้าน</p>
-      <p class="footer-note">ข้อมูลการจองถูกเก็บในเบราว์เซอร์ของคุณ (localStorage)</p>
-    </div>
-  </footer>
-
-  <!-- Confirm Modal -->
-  <div id="confirmModal" class="modal hidden">
-    <div class="modal-backdrop"></div>
-    <div class="modal-content">
-      <h3>ยืนยันการจอง</h3>
-      <div id="confirmDetails" class="confirm-details"></div>
-      <div class="modal-actions">
-        <button type="button" class="btn btn-outline" id="cancelConfirm">ยกเลิก</button>
-        <button type="button" class="btn btn-primary" id="confirmBooking">ยืนยันจอง</button>
-      </div>
-    </div>
-  </div>
-
-  <script src="script.js"></script>
-</body>
-</html>
+            <p class="about-barber
