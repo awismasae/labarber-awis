@@ -1,6 +1,3 @@
-/**
- * LA Barber – คิวกลางใน Google Sheet
- */
 const API = 'https://script.google.com/macros/s/AKfycbyj7vglCTIY835MkNGMqC1Tu0jYgQybZzYhZS1MFvjFAFNRntB2kyWacIyN6OnQx5F1/exec';
 
 function formatDateThai(dateStr) {
@@ -9,7 +6,7 @@ function formatDateThai(dateStr) {
   if (Number.isNaN(d.getTime())) return String(dateStr);
   const days = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
   const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear() + 543}`;
+  return days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + (d.getFullYear() + 543);
 }
 
 function isMonday(dateStr) {
@@ -28,14 +25,14 @@ function saveMyBooking(id) {
     const list = JSON.parse(localStorage.getItem('labarber_my_bookings') || '[]');
     if (!list.includes(id)) list.push(id);
     localStorage.setItem('labarber_my_bookings', JSON.stringify(list));
-  } catch {}
+  } catch (e) {}
 }
 
 function isMyBooking(id) {
   try {
     const list = JSON.parse(localStorage.getItem('labarber_my_bookings') || '[]');
     return list.includes(String(id));
-  } catch {
+  } catch (e) {
     return false;
   }
 }
@@ -66,7 +63,7 @@ function showSection(sectionId) {
   document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
   const section = document.getElementById(sectionId);
   if (section) section.classList.add('active');
-  document.querySelectorAll(`.nav-link[data-section="${sectionId}"]`).forEach(l => l.classList.add('active'));
+  document.querySelectorAll('.nav-link[data-section="' + sectionId + '"]').forEach(l => l.classList.add('active'));
   const mobile = document.getElementById('mobileNav');
   if (mobile) mobile.classList.remove('open');
   if (sectionId === 'queue') renderQueue();
@@ -86,13 +83,13 @@ function setupForm() {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   dateInput.min = tomorrow.toISOString().split('T')[0];
-  dateInput.addEventListener('change', () => {
+  dateInput.addEventListener('change', function() {
     if (isMonday(dateInput.value)) {
       alert('วันจันทร์ร้านหยุดครับ กรุณาเลือกวันอื่น');
       dateInput.value = '';
     }
   });
-  form.addEventListener('submit', async (e) => {
+  form.addEventListener('submit', async function(e) {
     e.preventDefault();
     const booking = {
       customerName: document.getElementById('customerName').value.trim(),
@@ -102,8 +99,8 @@ function setupForm() {
       time: document.getElementById('time').value,
       service: document.getElementById('service').value,
       note: document.getElementById('note').value.trim(),
-      lat: document.getElementById('lat')?.value || '',
-      lng: document.getElementById('lng')?.value || '',
+      lat: document.getElementById('lat') ? document.getElementById('lat').value : '',
+      lng: document.getElementById('lng') ? document.getElementById('lng').value : '',
       createdAt: new Date().toISOString()
     };
     if (isMonday(booking.date)) {
@@ -113,23 +110,22 @@ function setupForm() {
     try {
       const existing = await fetchBookings();
       if (existing.find(b => String(b.date).slice(0, 10) === booking.date && b.time === booking.time)) {
-        alert(`ขออภัย ช่วงเวลา ${booking.time} น. ของวันที่ ${formatDateThai(booking.date)} มีคนจองแล้ว`);
+        alert('ขออภัย ช่วงเวลานี้มีคนจองแล้ว');
         return;
       }
-    } catch {
+    } catch (err) {
       alert('เชื่อมต่อคิวกลางไม่ได้ ลองใหม่อีกครั้ง');
       return;
     }
     pendingBooking = booking;
-    document.getElementById('confirmDetails').innerHTML = `
-      <p><strong>ชื่อ:</strong> ${escapeHtml(booking.customerName)}</p>
-      <p><strong>โทร:</strong> ${escapeHtml(booking.phone)}</p>
-      <p><strong>ที่อยู่:</strong> ${escapeHtml(booking.address)}</p>
-      <p><strong>วันเวลา:</strong> ${formatDateThai(booking.date)} เวลา ${booking.time} น.</p>
-      <p><strong>บริการ:</strong> ${escapeHtml(booking.service)}</p>
-      ${booking.note ? `<p><strong>หมายเหตุ:</strong> ${escapeHtml(booking.note)}</p>` : ''}
-      ${booking.lat ? `<p><strong>พิกัด:</strong> ${booking.lat}, ${booking.lng}</p>` : ''}
-    `;
+    document.getElementById('confirmDetails').innerHTML =
+      '<p><strong>ชื่อ:</strong> ' + escapeHtml(booking.customerName) + '</p>' +
+      '<p><strong>โทร:</strong> ' + escapeHtml(booking.phone) + '</p>' +
+      '<p><strong>ที่อยู่:</strong> ' + escapeHtml(booking.address) + '</p>' +
+      '<p><strong>วันเวลา:</strong> ' + formatDateThai(booking.date) + ' เวลา ' + booking.time + ' น.</p>' +
+      '<p><strong>บริการ:</strong> ' + escapeHtml(booking.service) + '</p>' +
+      (booking.note ? '<p><strong>หมายเหตุ:</strong> ' + escapeHtml(booking.note) + '</p>' : '') +
+      (booking.lat ? '<p><strong>พิกัด:</strong> ' + booking.lat + ', ' + booking.lng + '</p>' : '');
     document.getElementById('confirmModal').classList.remove('hidden');
   });
 }
@@ -145,22 +141,19 @@ async function confirmAndSave() {
   btn.disabled = true;
   try {
     const result = await postJson(pendingBooking);
-    if (result && result.id) {
-      saveMyBooking(result.id);
-    }
-    document.getElementById('successMessage').textContent =
-      `จองคิวสำเร็จสำหรับ ${formatDateThai(pendingBooking.date)} เวลา ${pendingBooking.time} น.`;
+    if (result && result.id) saveMyBooking(result.id);
+    document.getElementById('successMessage').textContent = 'จองคิวสำเร็จสำหรับ ' + formatDateThai(pendingBooking.date) + ' เวลา ' + pendingBooking.time + ' น.';
     document.getElementById('bookingSuccess').classList.remove('hidden');
     document.getElementById('bookingForm').reset();
     hideConfirmModal();
-  } catch {
+  } catch (err) {
     alert('บันทึกคิวไม่สำเร็จ ลองใหม่อีกครั้ง');
   } finally {
     btn.disabled = false;
   }
 }
 
-async function renderQueue(filterDate = null) {
+async function renderQueue(filterDate) {
   const listEl = document.getElementById('queueList');
   const emptyEl = document.getElementById('queueEmpty');
   if (!listEl) return;
@@ -174,76 +167,106 @@ async function renderQueue(filterDate = null) {
       return;
     }
     emptyEl.classList.add('hidden');
-    listEl.innerHTML = bookings.map(b => {
+    listEl.innerHTML = bookings.map(function(b) {
       const canCancel = isMyBooking(b.id);
-      return `
-        <div class="queue-item">
-          <div class="queue-time">
-            <div class="date">${formatDateThai(b.date)}</div>
-            <div class="time">${b.time} น.</div>
-          </div>
-          <div class="queue-info">
-            <h4>${escapeHtml(b.customerName)}</h4>
-            <span class="service-tag">${escapeHtml(b.service)}</span>
-          </div>
-          <div class="queue-actions">
-            ${canCancel
-              ? `<button type="button" class="btn btn-danger btn-cancel" data-id="${b.id}">ยกเลิกคิวของฉัน</button>`
-              : `<span style="color:#999;font-size:0.85rem;">—</span>`
-            }
-          </div>
-        </div>
-      `;
+      return '<div class="queue-item">' +
+        '<div class="queue-time"><div class="date">' + formatDateThai(b.date) + '</div><div class="time">' + b.time + ' น.</div></div>' +
+        '<div class="queue-info"><h4>' + escapeHtml(b.customerName) + '</h4><span class="service-tag">' + escapeHtml(b.service) + '</span></div>' +
+        '<div class="queue-actions">' +
+        (canCancel ? '<button type="button" class="btn btn-danger btn-cancel" data-id="' + b.id + '">ยกเลิกคิวของฉัน</button>' : '<span style="color:#999;font-size:0.85rem;">—</span>') +
+        '</div></div>';
     }).join('');
-    listEl.querySelectorAll('.btn-cancel').forEach(btn => {
-      btn.addEventListener('click', async () => {
+    listEl.querySelectorAll('.btn-cancel').forEach(function(btn) {
+      btn.addEventListener('click', async function() {
         if (!confirm('ต้องการยกเลิกคิวนี้ใช่หรือไม่?')) return;
         await postJson({ action: 'delete', id: btn.dataset.id });
         try {
           const list = JSON.parse(localStorage.getItem('labarber_my_bookings') || '[]');
-          localStorage.setItem('labarber_my_bookings', JSON.stringify(list.filter(id => id !== btn.dataset.id)));
-        } catch {}
+          localStorage.setItem('labarber_my_bookings', JSON.stringify(list.filter(function(id) { return id !== btn.dataset.id; })));
+        } catch (e) {}
         renderQueue(document.getElementById('filterDate').value || null);
       });
     });
-  } catch {
+  } catch (err) {
     listEl.innerHTML = '<p style="text-align:center;color:#B33A3A">โหลดคิวไม่ได้ ลองกดรีเฟรช</p>';
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function() {
   const year = document.getElementById('year');
   if (year) year.textContent = new Date().getFullYear() + 543;
 
-  document.querySelectorAll('[data-section]').forEach(el => {
-    el.addEventListener('click', (e) => {
+  document.querySelectorAll('[data-section]').forEach(function(el) {
+    el.addEventListener('click', function(e) {
       e.preventDefault();
       if (el.dataset.section) showSection(el.dataset.section);
     });
   });
 
   const menu = document.getElementById('menuToggle');
-  if (menu) menu.addEventListener('click', () => document.getElementById('mobileNav').classList.toggle('open'));
+  if (menu) menu.addEventListener('click', function() {
+    document.getElementById('mobileNav').classList.toggle('open');
+  });
 
   setupForm();
 
-  document.getElementById('cancelConfirm')?.addEventListener('click', hideConfirmModal);
-  document.getElementById('confirmBooking')?.addEventListener('click', confirmAndSave);
-  document.querySelector('.modal-backdrop')?.addEventListener('click', hideConfirmModal);
+  const cancelConfirm = document.getElementById('cancelConfirm');
+  if (cancelConfirm) cancelConfirm.addEventListener('click', hideConfirmModal);
+  const confirmBooking = document.getElementById('confirmBooking');
+  if (confirmBooking) confirmBooking.addEventListener('click', confirmAndSave);
+  const backdrop = document.querySelector('.modal-backdrop');
+  if (backdrop) backdrop.addEventListener('click', hideConfirmModal);
 
-  document.getElementById('filterDate')?.addEventListener('change', (e) => renderQueue(e.target.value || null));
-  document.getElementById('clearFilter')?.addEventListener('click', () => {
+  const filterDate = document.getElementById('filterDate');
+  if (filterDate) filterDate.addEventListener('change', function(e) {
+    renderQueue(e.target.value || null);
+  });
+  const clearFilter = document.getElementById('clearFilter');
+  if (clearFilter) clearFilter.addEventListener('click', function() {
     document.getElementById('filterDate').value = '';
     renderQueue();
   });
-  document.getElementById('refreshQueue')?.addEventListener('click', () => renderQueue(document.getElementById('filterDate').value || null));
-  document.getElementById('goToQueue')?.addEventListener('click', () => showSection('queue'));
+  const refreshQueue = document.getElementById('refreshQueue');
+  if (refreshQueue) refreshQueue.addEventListener('click', function() {
+    renderQueue(document.getElementById('filterDate').value || null);
+  });
+  const goToQueue = document.getElementById('goToQueue');
+  if (goToQueue) goToQueue.addEventListener('click', function() {
+    showSection('queue');
+  });
 
-  // ปุ่มใช้ตำแหน่งปัจจุบัน
-  document.getElementById('getLocation')?.addEventListener('click', () => {
-    if (!navigator.geolocation) {
-      alert('เบราว์เซอร์นี้ไม่รองรับการระบุตำแหน่ง');
-      return;
-    }
-    const btn = document.getElementById('getLocation');
-    btn.disabled = true;
+  const getLocation = document.getElementById('getLocation');
+  if (getLocation) {
+    getLocation.addEventListener('click', function() {
+      if (!navigator.geolocation) {
+        alert('เบราว์เซอร์นี้ไม่รองรับการระบุตำแหน่ง');
+        return;
+      }
+      getLocation.disabled = true;
+      getLocation.textContent = 'กำลังหาตำแหน่ง...';
+      navigator.geolocation.getCurrentPosition(
+        function(pos) {
+          const lat = pos.coords.latitude.toFixed(6);
+          const lng = pos.coords.longitude.toFixed(6);
+          document.getElementById('lat').value = lat;
+          document.getElementById('lng').value = lng;
+          const addressField = document.getElementById('address');
+          if (!addressField.value.trim()) {
+            addressField.value = 'พิกัด: ' + lat + ', ' + lng;
+          }
+          alert('บันทึกตำแหน่งแล้ว\nพิกัด: ' + lat + ', ' + lng);
+          getLocation.textContent = '📍 ใช้ตำแหน่งปัจจุบัน';
+          getLocation.disabled = false;
+        },
+        function() {
+          alert('ไม่สามารถระบุตำแหน่งได้ กรุณาอนุญาตการเข้าถึงตำแหน่ง');
+          getLocation.textContent = '📍 ใช้ตำแหน่งปัจจุบัน';
+          getLocation.disabled = false;
+        }
+      );
+    });
+  }
+
+  const hash = window.location.hash.slice(1);
+  showSection(['home', 'booking', 'queue', 'about'].indexOf(hash) !== -1 ? hash : 'home');
+});
