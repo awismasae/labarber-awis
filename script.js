@@ -194,10 +194,20 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('mobileNav').classList.toggle('open');
   });
   setupForm();
+
   const cancelBtn = document.getElementById('cancelConfirm');
   if (cancelBtn) cancelBtn.addEventListener('click', hideConfirmModal);
   const confirmBtn = document.getElementById('confirmBooking');
   if (confirmBtn) confirmBtn.addEventListener('click', confirmAndSave);
+
+  // ปุ่มไปดูคิวทั้งหมด
+  const goToQueue = document.getElementById('goToQueue');
+  if (goToQueue) {
+    goToQueue.addEventListener('click', function() {
+      showSection('queue');
+    });
+  }
+
   const getLoc = document.getElementById('getLocation');
   if (getLoc) {
     getLoc.addEventListener('click', function() {
@@ -221,5 +231,6 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
   }
+
   showSection('home');
 });
