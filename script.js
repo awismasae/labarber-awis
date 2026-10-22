@@ -1,8 +1,5 @@
 /**
  * LA Barber – คิวกลางใน Google Sheet
- * หยุดทุกวันจันทร์
- * ลูกค้าลบได้เฉพาะคิวของตัวเองเท่านั้น
- * หน้าเช็คคิวแสดงแค่ชื่อกับเวลา
  */
 const API = 'https://script.google.com/macros/s/AKfycbyj7vglCTIY835MkNGMqC1Tu0jYgQybZzYhZS1MFvjFAFNRntB2kyWacIyN6OnQx5F1/exec';
 
@@ -105,8 +102,8 @@ function setupForm() {
       time: document.getElementById('time').value,
       service: document.getElementById('service').value,
       note: document.getElementById('note').value.trim(),
-      lat: document.getElementById('lat').value,
-      lng: document.getElementById('lng').value,
+      lat: document.getElementById('lat')?.value || '',
+      lng: document.getElementById('lng')?.value || '',
       createdAt: new Date().toISOString()
     };
     if (isMonday(booking.date)) {
@@ -214,59 +211,39 @@ async function renderQueue(filterDate = null) {
   }
 }
 
-// ปุ่มใช้ตำแหน่งปัจจุบัน
-document.getElementById('getLocation')?.addEventListener('click', () => {
-  if (!navigator.geolocation) {
-    alert('เบราว์เซอร์นี้ไม่รองรับการระบุตำแหน่ง');
-    return;
-  }
-  const btn = document.getElementById('getLocation');
-  btn.disabled = true;
-  btn.textContent = 'กำลังหาตำแหน่ง...';
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      const lat = pos.coords.latitude.toFixed(6);
-      const lng = pos.coords.longitude.toFixed(6);
-      document.getElementById('lat').value = lat;
-      document.getElementById('lng').value = lng;
-      const addressField = document.getElementById('address');
-      if (!addressField.value.trim()) {
-        addressField.value = `พิกัด: ${lat}, ${lng}`;
-      }
-      alert(`บันทึกตำแหน่งแล้ว\nพิกัด: ${lat}, ${lng}`);
-      btn.textContent = '📍 ใช้ตำแหน่งปัจจุบัน';
-      btn.disabled = false;
-    },
-    () => {
-      alert('ไม่สามารถระบุตำแหน่งได้ กรุณาอนุญาตการเข้าถึงตำแหน่ง');
-      btn.textContent = '📍 ใช้ตำแหน่งปัจจุบัน';
-      btn.disabled = false;
-    }
-  );
-});
-
 document.addEventListener('DOMContentLoaded', () => {
   const year = document.getElementById('year');
   if (year) year.textContent = new Date().getFullYear() + 543;
+
   document.querySelectorAll('[data-section]').forEach(el => {
     el.addEventListener('click', (e) => {
       e.preventDefault();
       if (el.dataset.section) showSection(el.dataset.section);
     });
   });
+
   const menu = document.getElementById('menuToggle');
   if (menu) menu.addEventListener('click', () => document.getElementById('mobileNav').classList.toggle('open'));
+
   setupForm();
-  document.getElementById('cancelConfirm').addEventListener('click', hideConfirmModal);
-  document.getElementById('confirmBooking').addEventListener('click', confirmAndSave);
-  document.querySelector('.modal-backdrop').addEventListener('click', hideConfirmModal);
-  document.getElementById('filterDate').addEventListener('change', (e) => renderQueue(e.target.value || null));
-  document.getElementById('clearFilter').addEventListener('click', () => {
+
+  document.getElementById('cancelConfirm')?.addEventListener('click', hideConfirmModal);
+  document.getElementById('confirmBooking')?.addEventListener('click', confirmAndSave);
+  document.querySelector('.modal-backdrop')?.addEventListener('click', hideConfirmModal);
+
+  document.getElementById('filterDate')?.addEventListener('change', (e) => renderQueue(e.target.value || null));
+  document.getElementById('clearFilter')?.addEventListener('click', () => {
     document.getElementById('filterDate').value = '';
     renderQueue();
   });
-  document.getElementById('refreshQueue').addEventListener('click', () => renderQueue(document.getElementById('filterDate').value || null));
-  document.getElementById('goToQueue').addEventListener('click', () => showSection('queue'));
-  const hash = window.location.hash.slice(1);
-  showSection(['home', 'booking', 'queue', 'about'].includes(hash) ? hash : 'home');
-});
+  document.getElementById('refreshQueue')?.addEventListener('click', () => renderQueue(document.getElementById('filterDate').value || null));
+  document.getElementById('goToQueue')?.addEventListener('click', () => showSection('queue'));
+
+  // ปุ่มใช้ตำแหน่งปัจจุบัน
+  document.getElementById('getLocation')?.addEventListener('click', () => {
+    if (!navigator.geolocation) {
+      alert('เบราว์เซอร์นี้ไม่รองรับการระบุตำแหน่ง');
+      return;
+    }
+    const btn = document.getElementById('getLocation');
+    btn.disabled = true;
