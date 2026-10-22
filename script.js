@@ -105,6 +105,8 @@ function setupForm() {
       time: document.getElementById('time').value,
       service: document.getElementById('service').value,
       note: document.getElementById('note').value.trim(),
+      lat: document.getElementById('lat').value,
+      lng: document.getElementById('lng').value,
       createdAt: new Date().toISOString()
     };
     if (isMonday(booking.date)) {
@@ -129,6 +131,7 @@ function setupForm() {
       <p><strong>วันเวลา:</strong> ${formatDateThai(booking.date)} เวลา ${booking.time} น.</p>
       <p><strong>บริการ:</strong> ${escapeHtml(booking.service)}</p>
       ${booking.note ? `<p><strong>หมายเหตุ:</strong> ${escapeHtml(booking.note)}</p>` : ''}
+      ${booking.lat ? `<p><strong>พิกัด:</strong> ${booking.lat}, ${booking.lng}</p>` : ''}
     `;
     document.getElementById('confirmModal').classList.remove('hidden');
   });
@@ -174,10 +177,8 @@ async function renderQueue(filterDate = null) {
       return;
     }
     emptyEl.classList.add('hidden');
-
     listEl.innerHTML = bookings.map(b => {
       const canCancel = isMyBooking(b.id);
-
       return `
         <div class="queue-item">
           <div class="queue-time">
@@ -191,51 +192,4 @@ async function renderQueue(filterDate = null) {
           <div class="queue-actions">
             ${canCancel
               ? `<button type="button" class="btn btn-danger btn-cancel" data-id="${b.id}">ยกเลิกคิวของฉัน</button>`
-              : `<span style="color:#999;font-size:0.85rem;">—</span>`
-            }
-          </div>
-        </div>
-      `;
-    }).join('');
-
-    listEl.querySelectorAll('.btn-cancel').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        if (!confirm('ต้องการยกเลิกคิวนี้ใช่หรือไม่?')) return;
-        await postJson({ action: 'delete', id: btn.dataset.id });
-        try {
-          const list = JSON.parse(localStorage.getItem('labarber_my_bookings') || '[]');
-          localStorage.setItem('labarber_my_bookings', JSON.stringify(list.filter(id => id !== btn.dataset.id)));
-        } catch {}
-        renderQueue(document.getElementById('filterDate').value || null);
-      });
-    });
-  } catch {
-    listEl.innerHTML = '<p style="text-align:center;color:#B33A3A">โหลดคิวไม่ได้ ลองกดรีเฟรช</p>';
-  }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const year = document.getElementById('year');
-  if (year) year.textContent = new Date().getFullYear() + 543;
-  document.querySelectorAll('[data-section]').forEach(el => {
-    el.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (el.dataset.section) showSection(el.dataset.section);
-    });
-  });
-  const menu = document.getElementById('menuToggle');
-  if (menu) menu.addEventListener('click', () => document.getElementById('mobileNav').classList.toggle('open'));
-  setupForm();
-  document.getElementById('cancelConfirm').addEventListener('click', hideConfirmModal);
-  document.getElementById('confirmBooking').addEventListener('click', confirmAndSave);
-  document.querySelector('.modal-backdrop').addEventListener('click', hideConfirmModal);
-  document.getElementById('filterDate').addEventListener('change', (e) => renderQueue(e.target.value || null));
-  document.getElementById('clearFilter').addEventListener('click', () => {
-    document.getElementById('filterDate').value = '';
-    renderQueue();
-  });
-  document.getElementById('refreshQueue').addEventListener('click', () => renderQueue(document.getElementById('filterDate').value || null));
-  document.getElementById('goToQueue').addEventListener('click', () => showSection('queue'));
-  const hash = window.location.hash.slice(1);
-  showSection(['home', 'booking', 'queue', 'about'].includes(hash) ? hash : 'home');
-});
+              : `<span
