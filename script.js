@@ -9,6 +9,16 @@ function formatDateThai(dateStr) {
   return days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + (d.getFullYear() + 543);
 }
 
+function formatTime(timeStr) {
+  if (!timeStr) return '';
+  const s = String(timeStr);
+  if (s.includes('T')) {
+    const match = s.match(/T(\d{2}):(\d{2})/);
+    if (match) return match[1] + ':' + match[2];
+  }
+  return s.slice(0, 5);
+}
+
 function isMonday(dateStr) {
   if (!dateStr) return false;
   return new Date(dateStr + 'T00:00:00').getDay() === 1;
@@ -40,8 +50,10 @@ async function fetchBookings() {
   if (!res.ok) throw new Error('load failed');
   const list = await res.json();
   return (Array.isArray(list) ? list : []).sort((a, b) => {
-    if (a.date !== b.date) return String(a.date).localeCompare(String(b.date));
-    return String(a.time).localeCompare(String(b.time));
+    const da = String(a.date).slice(0, 10);
+    const db = String(b.date).slice(0, 10);
+    if (da !== db) return da.localeCompare(db);
+    return formatTime(a.time).localeCompare(formatTime(b.time));
   });
 }
 
@@ -103,7 +115,7 @@ function setupForm() {
     }
     try {
       const existing = await fetchBookings();
-      if (existing.find(b => String(b.date).slice(0, 10) === booking.date && b.time === booking.time)) {
+      if (existing.find(b => String(b.date).slice(0, 10) === booking.date && formatTime(b.time) === booking.time)) {
         alert('ช่วงเวลานี้มีคนจองแล้ว');
         return;
       }
@@ -157,7 +169,9 @@ async function renderQueue(filterDate) {
   listEl.innerHTML = '<p style="text-align:center">กำลังโหลด...</p>';
   try {
     let bookings = await fetchBookings();
-    if (filterDate) bookings = bookings.filter(b => String(b.date).slice(0, 10) === filterDate);
+    if (filterDate) {
+      bookings = bookings.filter(b => String(b.date).slice(0, 10) === filterDate);
+    }
     if (!bookings.length) {
       listEl.innerHTML = '';
       if (emptyEl) emptyEl.classList.remove('hidden');
@@ -166,7 +180,8 @@ async function renderQueue(filterDate) {
     if (emptyEl) emptyEl.classList.add('hidden');
     listEl.innerHTML = bookings.map(function(b) {
       const canCancel = isMyBooking(b.id);
-      return '<div class="queue-item"><div class="queue-time"><div class="date">' + formatDateThai(b.date) + '</div><div class="time">' + b.time + ' น.</div></div><div class="queue-info"><h4>' + escapeHtml(b.customerName) + '</h4></div><div class="queue-actions">' +
+      const timeDisplay = formatTime(b.time);
+      return '<div class="queue-item"><div class="queue-time"><div class="date">' + formatDateThai(b.date) + '</div><div class="time">' + timeDisplay + ' น.</div></div><div class="queue-info"><h4>' + escapeHtml(b.customerName) + '</h4></div><div class="queue-actions">' +
         (canCancel ? '<button class="btn btn-danger btn-cancel" data-id="' + b.id + '">ยกเลิก</button>' : '') +
         '</div></div>';
     }).join('');
@@ -174,7 +189,7 @@ async function renderQueue(filterDate) {
       btn.addEventListener('click', async function() {
         if (!confirm('ยกเลิกคิวนี้?')) return;
         await postJson({ action: 'delete', id: btn.dataset.id });
-        renderQueue();
+        renderQueue(document.getElementById('filterDate').value || null);
       });
     });
   } catch (err) {
@@ -200,11 +215,30 @@ document.addEventListener('DOMContentLoaded', function() {
   const confirmBtn = document.getElementById('confirmBooking');
   if (confirmBtn) confirmBtn.addEventListener('click', confirmAndSave);
 
-  // ปุ่มไปดูคิวทั้งหมด
   const goToQueue = document.getElementById('goToQueue');
   if (goToQueue) {
     goToQueue.addEventListener('click', function() {
       showSection('queue');
+    });
+  }
+
+  const filterDate = document.getElementById('filterDate');
+  if (filterDate) {
+    filterDate.addEventListener('change', function() {
+      renderQueue(filterDate.value || null);
+    });
+  }
+  const clearFilter = document.getElementById('clearFilter');
+  if (clearFilter) {
+    clearFilter.addEventListener('click', function() {
+      if (filterDate) filterDate.value = '';
+      renderQueue();
+    });
+  }
+  const refreshQueue = document.getElementById('refreshQueue');
+  if (refreshQueue) {
+    refreshQueue.addEventListener('click', function() {
+      renderQueue(filterDate ? filterDate.value || null : null);
     });
   }
 
