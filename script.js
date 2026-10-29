@@ -1,5 +1,5 @@
 const API = 'https://script.google.com/macros/s/AKfycbyj7vglCTIY835MkNGMqC1Tu0jYgQybZzYhZS1MFvjFAFNRntB2kyWacIyN6OnQx5F1/exec';
-const ADMIN_CODE = 'zola123'; // เปลี่ยนเป็นรหัสที่ตัวเองจำได้
+const ADMIN_CODE = 'zola123';
 
 function formatDateThai(dateStr) {
   if (!dateStr) return '';
@@ -180,26 +180,11 @@ async function renderQueue(filterDate) {
     }
     if (emptyEl) emptyEl.classList.add('hidden');
 
-    // โหมดแอดมิน
-    let isAdmin = sessionStorage.getItem('labarber_admin') === '1';
-    if (!isAdmin && confirm('เข้าสู่โหมดแอดมิน? (สำหรับช่างเท่านั้น)')) {
-      const code = prompt('กรอกรหัสแอดมิน');
-      if (code === ADMIN_CODE) {
-        sessionStorage.setItem('labarber_admin', '1');
-        isAdmin = true;
-      } else if (code !== null) {
-        alert('รหัสไม่ถูกต้อง');
-      }
-    }
+    const isAdmin = sessionStorage.getItem('labarber_admin') === '1';
 
     listEl.innerHTML = bookings.map(function(b) {
       const canCancel = isMyBooking(b.id) || isAdmin;
       const timeDisplay = formatTime(b.time);
-      let phone = b.phone || '';
-      let address = b.address || '';
-      if (!isAdmin && phone.length >= 4) phone = 'xxx-xxx-' + phone.slice(-4);
-      if (!isAdmin && address.length > 15) address = address.substring(0, 15) + '...';
-
       return '<div class="queue-item"><div class="queue-time"><div class="date">' + formatDateThai(b.date) + '</div><div class="time">' + timeDisplay + ' น.</div></div><div class="queue-info"><h4>' + escapeHtml(b.customerName) + '</h4>' +
         (isAdmin ? '<p>📞 ' + escapeHtml(b.phone || '') + '</p><p>📍 ' + escapeHtml(b.address || '') + '</p>' : '') +
         '</div><div class="queue-actions">' +
@@ -263,34 +248,4 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   const refreshQueue = document.getElementById('refreshQueue');
   if (refreshQueue) {
-    refreshQueue.addEventListener('click', function() {
-      renderQueue(filterDate ? filterDate.value || null : null);
-    });
-  }
-
-  const getLoc = document.getElementById('getLocation');
-  if (getLoc) {
-    getLoc.addEventListener('click', function() {
-      if (!navigator.geolocation) { alert('ไม่รองรับ'); return; }
-      getLoc.disabled = true;
-      getLoc.textContent = 'กำลังหา...';
-      navigator.geolocation.getCurrentPosition(function(pos) {
-        const lat = pos.coords.latitude.toFixed(6);
-        const lng = pos.coords.longitude.toFixed(6);
-        if (document.getElementById('lat')) document.getElementById('lat').value = lat;
-        if (document.getElementById('lng')) document.getElementById('lng').value = lng;
-        const addr = document.getElementById('address');
-        if (addr && !addr.value.trim()) addr.value = 'พิกัด: ' + lat + ', ' + lng;
-        alert('บันทึกตำแหน่งแล้ว');
-        getLoc.textContent = '📍 ใช้ตำแหน่งปัจจุบัน';
-        getLoc.disabled = false;
-      }, function() {
-        alert('ไม่สามารถหาตำแหน่งได้');
-        getLoc.textContent = '📍 ใช้ตำแหน่งปัจจุบัน';
-        getLoc.disabled = false;
-      });
-    });
-  }
-
-  showSection('home');
-});
+    refreshQueue.addEventListener('click', function
