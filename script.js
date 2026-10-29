@@ -248,4 +248,81 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   const refreshQueue = document.getElementById('refreshQueue');
   if (refreshQueue) {
-    refreshQueue.addEventListener('click', function
+    refreshQueue.addEventListener('click', function() {
+      renderQueue(filterDate ? filterDate.value || null : null);
+    });
+  }
+
+  // ช่องล็อกอินแอดมิน
+  const queueSection = document.getElementById('queue');
+  if (queueSection) {
+    const adminBox = document.createElement('div');
+    adminBox.style.cssText = 'margin: 1rem 0; padding: 1rem; background: #f8f4ef; border-radius: 12px; text-align: center;';
+    adminBox.innerHTML = `
+      <input type="password" id="adminInput" placeholder="รหัสแอดมิน" style="padding: 0.5rem; border-radius: 8px; border: 1px solid #ddd; margin-right: 0.5rem;">
+      <button type="button" id="adminLogin" class="btn btn-outline btn-sm">เข้าสู่ระบบแอดมิน</button>
+      <button type="button" id="adminLogout" class="btn btn-outline btn-sm" style="display:none; margin-left:0.5rem;">ออกจากระบบ</button>
+    `;
+    const controls = queueSection.querySelector('.queue-controls');
+    if (controls) controls.after(adminBox);
+
+    const loginBtn = document.getElementById('adminLogin');
+    const logoutBtn = document.getElementById('adminLogout');
+    const adminInput = document.getElementById('adminInput');
+
+    function updateAdminUI() {
+      const isAdmin = sessionStorage.getItem('labarber_admin') === '1';
+      if (loginBtn) loginBtn.style.display = isAdmin ? 'none' : 'inline-block';
+      if (logoutBtn) logoutBtn.style.display = isAdmin ? 'inline-block' : 'none';
+      if (adminInput) adminInput.style.display = isAdmin ? 'none' : 'inline-block';
+    }
+    updateAdminUI();
+
+    if (loginBtn) {
+      loginBtn.addEventListener('click', function() {
+        if (adminInput.value === ADMIN_CODE) {
+          sessionStorage.setItem('labarber_admin', '1');
+          adminInput.value = '';
+          updateAdminUI();
+          renderQueue(filterDate ? filterDate.value || null : null);
+          alert('เข้าสู่โหมดแอดมินแล้ว');
+        } else {
+          alert('รหัสไม่ถูกต้อง');
+        }
+      });
+    }
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', function() {
+        sessionStorage.removeItem('labarber_admin');
+        updateAdminUI();
+        renderQueue(filterDate ? filterDate.value || null : null);
+      });
+    }
+  }
+
+  const getLoc = document.getElementById('getLocation');
+  if (getLoc) {
+    getLoc.addEventListener('click', function() {
+      if (!navigator.geolocation) { alert('ไม่รองรับ'); return; }
+      getLoc.disabled = true;
+      getLoc.textContent = 'กำลังหา...';
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        const lat = pos.coords.latitude.toFixed(6);
+        const lng = pos.coords.longitude.toFixed(6);
+        if (document.getElementById('lat')) document.getElementById('lat').value = lat;
+        if (document.getElementById('lng')) document.getElementById('lng').value = lng;
+        const addr = document.getElementById('address');
+        if (addr && !addr.value.trim()) addr.value = 'พิกัด: ' + lat + ', ' + lng;
+        alert('บันทึกตำแหน่งแล้ว');
+        getLoc.textContent = '📍 ใช้ตำแหน่งปัจจุบัน';
+        getLoc.disabled = false;
+      }, function() {
+        alert('ไม่สามารถหาตำแหน่งได้');
+        getLoc.textContent = '📍 ใช้ตำแหน่งปัจจุบัน';
+        getLoc.disabled = false;
+      });
+    });
+  }
+
+  showSection('home');
+});
