@@ -1,4 +1,5 @@
 const API = 'https://script.google.com/macros/s/AKfycbyj7vglCTIY835MkNGMqC1Tu0jYgQybZzYhZS1MFvjFAFNRntB2kyWacIyN6OnQx5F1/exec';
+const ADMIN_CODE = 'zola123'; // เปลี่ยนเป็นรหัสที่ตัวเองจำได้
 
 function formatDateThai(dateStr) {
   if (!dateStr) return '';
@@ -178,17 +179,42 @@ async function renderQueue(filterDate) {
       return;
     }
     if (emptyEl) emptyEl.classList.add('hidden');
+
+    // โหมดแอดมิน
+    let isAdmin = sessionStorage.getItem('labarber_admin') === '1';
+    if (!isAdmin && confirm('เข้าสู่โหมดแอดมิน? (สำหรับช่างเท่านั้น)')) {
+      const code = prompt('กรอกรหัสแอดมิน');
+      if (code === ADMIN_CODE) {
+        sessionStorage.setItem('labarber_admin', '1');
+        isAdmin = true;
+      } else if (code !== null) {
+        alert('รหัสไม่ถูกต้อง');
+      }
+    }
+
     listEl.innerHTML = bookings.map(function(b) {
-      const canCancel = isMyBooking(b.id);
+      const canCancel = isMyBooking(b.id) || isAdmin;
       const timeDisplay = formatTime(b.time);
-      return '<div class="queue-item"><div class="queue-time"><div class="date">' + formatDateThai(b.date) + '</div><div class="time">' + timeDisplay + ' น.</div></div><div class="queue-info"><h4>' + escapeHtml(b.customerName) + '</h4></div><div class="queue-actions">' +
-        (canCancel ? '<button class="btn btn-danger btn-cancel" data-id="' + b.id + '">ยกเลิก</button>' : '') +
+      let phone = b.phone || '';
+      let address = b.address || '';
+      if (!isAdmin && phone.length >= 4) phone = 'xxx-xxx-' + phone.slice(-4);
+      if (!isAdmin && address.length > 15) address = address.substring(0, 15) + '...';
+
+      return '<div class="queue-item"><div class="queue-time"><div class="date">' + formatDateThai(b.date) + '</div><div class="time">' + timeDisplay + ' น.</div></div><div class="queue-info"><h4>' + escapeHtml(b.customerName) + '</h4>' +
+        (isAdmin ? '<p>📞 ' + escapeHtml(b.phone || '') + '</p><p>📍 ' + escapeHtml(b.address || '') + '</p>' : '') +
+        '</div><div class="queue-actions">' +
+        (canCancel ? '<button class="btn btn-danger btn-cancel" data-id="' + b.id + '">' + (isAdmin ? 'ลบคิว' : 'ยกเลิก') + '</button>' : '') +
         '</div></div>';
     }).join('');
+
     listEl.querySelectorAll('.btn-cancel').forEach(function(btn) {
       btn.addEventListener('click', async function() {
-        if (!confirm('ยกเลิกคิวนี้?')) return;
+        if (!confirm('ลบคิวนี้ใช่หรือไม่?')) return;
         await postJson({ action: 'delete', id: btn.dataset.id });
+        try {
+          const list = JSON.parse(localStorage.getItem('labarber_my_bookings') || '[]');
+          localStorage.setItem('labarber_my_bookings', JSON.stringify(list.filter(id => id !== btn.dataset.id)));
+        } catch {}
         renderQueue(document.getElementById('filterDate').value || null);
       });
     });
